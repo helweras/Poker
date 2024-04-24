@@ -1,47 +1,78 @@
-import numpy as np
-from random import choice
 from Table import Table
-
-table = Table(players=4)
-
-original_deck = table.gen_deck_of_cards()
-
-table.card_draw(original_deck)
+from Rules import CheckRules
+from Players import Player
 
 
-def flop(deck: list):
-    for _ in range(3):
-        card = choice(deck)
-        table.flop.append(card)
-        deck.remove(card)
+def test_random(count: int):
+    iter = 0
+    for i in range(count):
+        table = Table(players=4)
+        original_deck = table.gen_deck_of_cards()
+        table.card_draw(original_deck)
+        table.flop_draw(original_deck)
+        table.turn_draw(original_deck)
+        table.river_draw(original_deck)
+        iter += 1
+
+        table_test = Table(players=4)
+
+        original_deck_test = table.gen_deck_of_cards()
+
+        work = []
+        na = []
+        table_test.card_draw(list_deck=original_deck)
+
+        for pl in table.list_players:
+            for card in pl.hand:
+                na.append(card)
+        table.flop_draw(original_deck_test)
+
+        for card_flop in table.flop:
+            na.append(card_flop)
+
+        table_test.turn_draw(original_deck_test)
+
+        na.append(table.turn[0])
+
+        table_test.river_draw(original_deck_test)
+
+        na.append(table.river[0])
+
+        for hand in na:
+            if hand in work:
+                print(f'итерация {iter}, повтор')
+                print('for hend', na[:8])
+                print('for flop', na[8:11])
+                print('for turn', na[-1])
+                return
+            else:
+                work.append(hand)
+
+        if len(original_deck_test) != 39:
+            print(f'итерация {iter} хуй карт в колоде не то колличество')
+            return
+    print(True)
 
 
-def turn(deck: list):
-    card = choice(deck)
-    table.turn.append(card)
-    table.turn.extend(table.flop)
-    deck.remove(card)
+def test_quads(it: int):
+    count_qads = 0
+    for i in range(it):
+        table = Table(players=4)
+        original_deck = table.gen_deck_of_cards()
+        table.card_draw(original_deck)
+        table.flop_draw(original_deck)
+        table.turn_draw(original_deck)
+        table.river_draw(original_deck)
+
+        for pl in table.list_players:
+            pl.get_cards(table.river)
+            if pl.check_comb():
+                count_qads += 1
+                print(f'Итерация № {i}')
+                print(f'рука c карэ {pl.hand}')
+                print(f'{table.river} стол')
+                print()
+    print(count_qads)
 
 
-for i in table.list_players:
-    print(i.card)
-print(len(original_deck))
-# def test():
-#     for i in range(1000):
-#         players1 = [Players.Player() for x in range(4)]
-#
-#         work = []
-#         work_deck = table.gen_deck_of_cards()
-#         na = []
-#         card_draw(list_players=players1, list_deck=work_deck)
-#
-#         for pl in players1:
-#             for card in pl.card:
-#                 na.append(card)
-#         for card in na:
-#             if card in work:
-#                 print('xyi')
-#                 return
-#             else:
-#                 work.append(card)
-#     print(True)
+test_quads(1000)
