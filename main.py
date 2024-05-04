@@ -57,7 +57,7 @@ def test_random(count: int):
 def test_quads(it: int):
     count_qads = 0
     for i in range(it):
-        table = Table(players=4)
+        table = Table(players=8)
         original_deck = table.gen_deck_of_cards()
         table.card_draw(original_deck)
         table.flop_draw(original_deck)
@@ -67,12 +67,12 @@ def test_quads(it: int):
         for pl in table.list_players:
             pl.get_cards(table.river)
             if pl.check_comb():
-                count_qads += 1
-                print(f'Итерация № {i}')
-                print(f'рука c карэ {pl.hand}')
-                print(f'{table.river} стол')
-                print()
-    print(count_qads)
+                if pl.check_comb()[-1] == 'street-flash':
+                    count_qads += 1
+                    print(f'рука  {pl.hand}')
+                    print(f'{table.river} стол')
+                    print()
+    return count_qads
 
 
-test_quads(1000)
+print(test_quads(10000))
