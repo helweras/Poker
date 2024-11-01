@@ -16,30 +16,31 @@ def test_random(count: int):
 
         table_test = Table(players=4)
 
-        original_deck_test = table.gen_deck_of_cards()
+        original_deck_test = table_test.gen_deck_of_cards()
 
         work = []
         na = []
-        table_test.card_draw(list_deck=original_deck)
+        table_test.card_draw(list_deck=original_deck_test)
 
-        for pl in table.list_players:
+        for pl in table_test.list_players:
             for card in pl.hand:
                 na.append(card)
-        table.flop_draw(original_deck_test)
+        table_test.flop_draw(original_deck_test)
 
-        for card_flop in table.flop:
+        for card_flop in table_test.flop:
             na.append(card_flop)
 
         table_test.turn_draw(original_deck_test)
 
-        na.append(table.turn[0])
+        na.append(table_test.turn[0])
 
         table_test.river_draw(original_deck_test)
 
-        na.append(table.river[0])
+        na.append(table_test.river[0])
 
         for hand in na:
             if hand in work:
+                print(work)
                 print(f'итерация {iter}, повтор')
                 print('for hend', na[:8])
                 print('for flop', na[8:11])
@@ -48,7 +49,7 @@ def test_random(count: int):
             else:
                 work.append(hand)
 
-        if len(original_deck_test) != 39:
+        if len(original_deck_test) != 39 or len(original_deck) != 39:
             print(f'итерация {iter} хуй карт в колоде не то колличество')
             return
     print(True)
@@ -66,8 +67,8 @@ def test_quads(it: int):
 
         for pl in table.list_players:
             pl.get_cards(table.river)
-            if pl.check_comb():
-                if pl.check_comb()[-1] == 'street-flash':
+            if pl.check_comb(pl.play_card):
+                if pl.check_comb(pl.play_card) == 33:
                     count_qads += 1
                     print(f'рука  {pl.hand}')
                     print(f'{table.river} стол')
@@ -75,4 +76,4 @@ def test_quads(it: int):
     return count_qads
 
 
-print(test_quads(10000))
+test_quads(10000)

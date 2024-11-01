@@ -124,3 +124,9 @@ class CheckRules:
     @staticmethod
     def higher_card(pl_card):
         return sorted(pl_card, key=lambda c: c[-1])[2:]
+
+    @classmethod
+    def get_comb(cls):
+        return (
+            cls.quads, cls.street_flash, cls.full_house, cls.flash, cls.street, cls.triple, cls.double_or_double,
+            cls.double, cls.higher_card)
