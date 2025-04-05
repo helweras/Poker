@@ -65,16 +65,30 @@ def test_quads(it: int):
         table.turn_draw(original_deck)
         table.river_draw(original_deck)
 
+        # for pl in table.list_players:
+        #     pl.get_cards(table.river)
+        #     pl.check_comb_new(pl.cards)
+        # winner = table.determ_winner()
+        # print(table.river, '---stol')
+        # print()
+        # for x in table.list_players:
+        #     print(x.hand, '---hand', x.cf_comb)
+        # print()
+        # for b in winner:
+        #     print(b.cf_comb)
+        #     print(b.hand, '---winner')
+
         for pl in table.list_players:
             pl.get_cards(table.river)
-            cf = pl.check_comb_new(pl.play_card)
-            if cf == 17 or cf == 33:
+            cf = pl.check_comb_new(pl.cards)
+            if cf == 20:
                 count_qads += 1
-                print(cf)
-                print(f'рука  {pl.hand}')
+                print(pl.hand)
+                print(f'играющие  {pl.play_card}')
+                print(f'все карты  {pl.cards}')
                 print(f'{table.river} стол')
                 print()
     return count_qads
 
 
-test_quads(1000)
+test_quads(100)

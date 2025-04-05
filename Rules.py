@@ -131,7 +131,8 @@ class CheckRules:
 
     @staticmethod
     def higher_card(pl_card):
-        return sorted(pl_card, key=lambda c: c[-1])[2:]
+        return 1
+        # return sorted(pl_card, key=lambda c: c[-1])[2:]
 
     @classmethod
     def get_comb(cls):
