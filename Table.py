@@ -42,5 +42,15 @@ class Table:
         self.river.append(card)
         self.river.extend(self.turn)
         deck.remove(card)
-
+    def determ_winner(self):
+        """Функция определяет победителя
+        Возвращает список с объектами класса Player с наибольшим коэфициентом"""
+        compare_player = self.list_players[0]
+        winner_list = [compare_player]
+        for player in self.list_players[1:]:
+            if player.cf_comb > winner_list[-1].cf_comb:
+                winner_list = [player]
+            elif player.cf_comb == winner_list[-1].cf_comb:
+                winner_list.append(player)
+        return winner_list
 

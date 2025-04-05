@@ -52,13 +52,15 @@ class CheckRules:
 
     @staticmethod
     def flash(pl_cards):
+        """Возвращает список какрт одной масти если найден флэш
+        Используется в функции street_flash"""
         count_mast = {key: [] for key in range(4)}
         for card in pl_cards:
             count_mast[card[0]].append(card)
         for key in count_mast:
             if len(count_mast[key]) >= 5:
-                return 17, count_mast[key]
-        return []
+                return count_mast[key]
+        return False
 
     @staticmethod
     def double_or_double(pl_cards):
@@ -75,6 +77,8 @@ class CheckRules:
 
     @staticmethod
     def triple_or_triple(pl_cards):
+        """Определяет кобимнацию Сет и исключает два Сета
+        Возвращает весовой коэф Сета если он найден и False если обнаружено два Сета"""
         triple = 0
         count_item = {key: 0 for key in range(2, 15)}
         for card in pl_cards:
@@ -99,7 +103,8 @@ class CheckRules:
             if count_item[card]:
                 check.append(count_item[card])
                 if len(check) == 5:
-                    return check
+                    return 16
+                    # return check
             else:
                 check = []
         for key in isk:
@@ -107,17 +112,20 @@ class CheckRules:
                 check_isk.append(count_item[key])
 
         if len(check_isk) == 5:
-            return sorted(list(chain.from_iterable(check_isk)), key=lambda x: x[-1])[::-1]
+            return 16
+            # return sorted(list(chain.from_iterable(check_isk)), key=lambda x: x[-1])[::-1]
         else:
             return False
 
     @classmethod
     def street_flash(cls, pl_cards):
-        if type(cls.flash(pl_cards)) is tuple:
-            if cls.street(cls.flash(pl_cards)[-1]):
+        """Возвращает коэф. стрит - флэша если он найден
+        Возвращает коэф. флеша если найден флэш и не найден стрит"""
+        if type(cls.flash(pl_cards)) is list:  #Если найден флэш
+            if cls.street(cls.flash(pl_cards)): #Если во флэше найден стрит
                 return 33
             else:
-                return False
+                return 17
         else:
             return False
 
@@ -128,5 +136,7 @@ class CheckRules:
     @classmethod
     def get_comb(cls):
         return (
-            cls.quads, cls.street_flash, cls.full_house, cls.flash, cls.street, cls.triple, cls.double_or_double,
+            cls.quads, cls.street_flash, cls.full_house, cls.street, cls.triple, cls.double_or_double,
             cls.double, cls.higher_card)
+
+

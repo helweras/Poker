@@ -6,8 +6,8 @@ from Players import Player
 def test_random(count: int):
     iter = 0
     for i in range(count):
-        table = Table(players=4)
-        original_deck = table.gen_deck_of_cards()
+        table = Table(players=4)  # Создаем стол
+        original_deck = table.gen_deck_of_cards()  # Генерация колоды карт
         table.card_draw(original_deck)
         table.flop_draw(original_deck)
         table.turn_draw(original_deck)
@@ -58,7 +58,7 @@ def test_random(count: int):
 def test_quads(it: int):
     count_qads = 0
     for i in range(it):
-        table = Table(players=8)
+        table = Table(players=1)
         original_deck = table.gen_deck_of_cards()
         table.card_draw(original_deck)
         table.flop_draw(original_deck)
@@ -67,13 +67,14 @@ def test_quads(it: int):
 
         for pl in table.list_players:
             pl.get_cards(table.river)
-            if pl.check_comb(pl.play_card):
-                if pl.check_comb(pl.play_card) == 33:
-                    count_qads += 1
-                    print(f'рука  {pl.hand}')
-                    print(f'{table.river} стол')
-                    print()
+            cf = pl.check_comb_new(pl.play_card)
+            if cf == 17 or cf == 33:
+                count_qads += 1
+                print(cf)
+                print(f'рука  {pl.hand}')
+                print(f'{table.river} стол')
+                print()
     return count_qads
 
 
-test_quads(10000)
+test_quads(1000)
