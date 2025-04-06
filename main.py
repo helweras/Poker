@@ -81,7 +81,7 @@ def test_quads(it: int):
         for pl in table.list_players:
             pl.get_cards(table.river)
             cf = pl.check_comb_new(pl.cards)
-            if cf == 20:
+            if cf == 10:
                 count_qads += 1
                 print(pl.hand)
                 print(f'играющие  {pl.play_card}')
@@ -91,4 +91,5 @@ def test_quads(it: int):
     return count_qads
 
 
-test_quads(100)
+test_quads(10)
+
