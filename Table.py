@@ -54,3 +54,22 @@ class Table:
                 winner_list.append(player)
         return winner_list
 
+    def final_win(self, winner_list):
+        winner_list_final = [winner_list[0]]
+        check = [i[-1] for i in winner_list[0].play_card]
+        for pl in winner_list[1:]:
+            play_card = [i[-1] for i in pl.play_card]
+            if play_card > check:
+                check = play_card
+                winner_list_final = [pl]
+            elif play_card == check:
+                winner_list_final.append(pl)
+        return winner_list_final
+
+
+
+
+
+
+
+
