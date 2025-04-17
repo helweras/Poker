@@ -2,15 +2,15 @@ from itertools import chain
 
 
 class CheckRules:
-    rules = {'старшая карта': 1,
-             'пара': 5,
-             '2 пары': 10,
-             'сет': 15,
-             'стрит': 16,
-             'флэш': 17,
-             'фулл-хаус': 20,
-             'карэ': 25,
-             'стрит-флэш': 33
+    rules = {1: 'старшая карта',
+             5: 'пара',
+             10: '2 пары',
+             15: 'сет',
+             16: 'стрит',
+             17: 'флэш',
+             20: 'фулл-хаус',
+             25: 'карэ',
+             33: 'стрит-флэш'
              }
 
     @staticmethod
@@ -121,8 +121,8 @@ class CheckRules:
     def street_flash(cls, pl_cards):
         """Возвращает коэф. стрит - флэша если он найден
         Возвращает коэф. флеша если найден флэш и не найден стрит"""
-        if type(cls.flash(pl_cards)) is list:  #Если найден флэш
-            if cls.street(cls.flash(pl_cards)): #Если во флэше найден стрит
+        if type(cls.flash(pl_cards)) is list:  # Если найден флэш
+            if cls.street(cls.flash(pl_cards)):  # Если во флэше найден стрит
                 return 33
             else:
                 return 17
@@ -139,5 +139,3 @@ class CheckRules:
         return (
             cls.quads, cls.street_flash, cls.full_house, cls.street, cls.triple, cls.double_or_double,
             cls.double, cls.higher_card)
-
-

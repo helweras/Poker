@@ -1,69 +1,26 @@
-from Table import Table
-from Rules import CheckRules
-from Players import Player
+from Table import Table, TableRabbit
+import matplotlib
 
-
-def test_random(count: int):
-    iter = 0
-    for i in range(count):
-        table = Table(players=4)  # Создаем стол
-        original_deck = table.gen_deck_of_cards()  # Генерация колоды карт
-        table.card_draw(original_deck)
-        table.flop_draw(original_deck)
-        table.turn_draw(original_deck)
-        table.river_draw(original_deck)
-        iter += 1
-
-        table_test = Table(players=4)
-
-        original_deck_test = table_test.gen_deck_of_cards()
-
-        work = []
-        na = []
-        table_test.card_draw(list_deck=original_deck_test)
-
-        for pl in table_test.list_players:
-            for card in pl.hand:
-                na.append(card)
-        table_test.flop_draw(original_deck_test)
-
-        for card_flop in table_test.flop:
-            na.append(card_flop)
-
-        table_test.turn_draw(original_deck_test)
-
-        na.append(table_test.turn[0])
-
-        table_test.river_draw(original_deck_test)
-
-        na.append(table_test.river[0])
-
-        for hand in na:
-            if hand in work:
-                print(work)
-                print(f'итерация {iter}, повтор')
-                print('for hend', na[:8])
-                print('for flop', na[8:11])
-                print('for turn', na[-1])
-                return
-            else:
-                work.append(hand)
-
-        if len(original_deck_test) != 39 or len(original_deck) != 39:
-            print(f'итерация {iter} хуй карт в колоде не то колличество')
-            return
-    print(True)
+rules = {1: 'старшая карта',
+         5: 'пара',
+         10: '2 пары',
+         15: 'сет',
+         16: 'стрит',
+         17: 'флэш',
+         20: 'фулл-хаус',
+         25: 'карэ',
+         33: 'стрит-флэш'
+         }
 
 
 def test_quads(it: int):
     count_qads = 0
     for i in range(it):
         table = Table(players=1)
-        original_deck = table.gen_deck_of_cards()
-        table.card_draw(original_deck)
-        table.flop_draw(original_deck)
-        table.turn_draw(original_deck)
-        table.river_draw(original_deck)
+        table.card_draw()
+        table.flop_draw()
+        table.turn_draw()
+        table.river_draw()
 
         # for pl in table.list_players:
         #     pl.get_cards(table.river)
@@ -91,8 +48,60 @@ def test_quads(it: int):
     return count_qads
 
 
-# test_quads(100000)
+def test_win(it):
+    for i in range(it):
+        table = TableRabbit(players=4)
+        table.full_play()
 
-d = [[2,4],2,5,5]
-z = [2,2,5,1]
-print(d > z)
+        for pl in table.list_players:
+            pl.get_cards(table.river)
+            pl.check_comb_new(pl.cards)
+
+        print(table.river)
+        winners = table.determ_winner()
+        print('--------winner---------')
+        for pl in winners:
+
+            print(pl.play_card)
+            print(pl.hand)
+            print(f'{pl.cf_comb} ---- {rules[pl.cf_comb]}')
+
+
+def r_true_hand():
+    table = TableRabbit(players=1, hand=[[1, 7], [1, 14]])
+    print(len(table.deck))
+
+def test_check_comb():
+    stat_table_orig = {}
+    stat_table_rabbit = {}
+    for i in range(100):
+        table_original = Table(players=1)
+
+        table_original.card_draw()
+        table_original.flop_draw()
+        table_original.turn_draw()
+        table_original.river_draw()
+
+        for pl in table_original.list_players:
+            pl.check_comb_new(pl.cards)
+            name = rules[pl.cf_comb]
+            stat_table_orig[name] = stat_table_orig.get(name, 0) + 1
+    print(stat_table_orig)
+
+
+    for i in range(100):
+        table_original = TableRabbit(players=1)
+
+        table_original.card_draw()
+        table_original.flop_draw()
+        table_original.turn_draw()
+        table_original.river_draw()
+
+        for pl in table_original.list_players:
+            pl.check_comb_new(pl.cards)
+            name = rules[pl.cf_comb]
+            stat_table_rabbit[name] = stat_table_rabbit.get(name, 0) + 1
+    print(stat_table_rabbit)
+
+
+test_check_comb()

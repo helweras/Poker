@@ -33,9 +33,9 @@ class Player:
     #     else:
     #         return CheckRules.higher_card(pl_card)
 
-    def check_comb_new(self, pl_cards: list):
+    def check_comb_new(self, cards: list):
         for comb in self.get_comb():
-            cf = comb(pl_cards)
+            cf = comb(self.cards)
             if cf:
                 self.cf_comb = cf
                 return cf
