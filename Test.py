@@ -3,28 +3,7 @@ from random import choice
 from Players import Player
 from Table import Table
 import time
-
-def test_quads(it: int):
-    for i in range(it):
-        table = Table(players=8)
-        original_deck = table.gen_deck_of_cards()
-        table.card_draw(original_deck)
-        table.flop_draw(original_deck)
-        table.turn_draw(original_deck)
-        table.river_draw(original_deck)
-
-def test_quads_new(it: int):
-    for i in range(it):
-        table = Table(players=4)
-        original_deck = table.gen_deck_of_cards()
-        table.card_draw(original_deck)
-        table.flop_draw(original_deck)
-        table.turn_draw(original_deck)
-        table.river_draw(original_deck)
-
-    return
-
-
+import numpy as np
 
 
 class StudentTest:
@@ -37,12 +16,12 @@ class StudentTest:
 
     def get_sd(self, param: list):
         m = sum(param) / len(param)
-        print(m, '---- математическое ожидание')
+        # print(m, '---- математическое ожидание')
         self.m_list.append(m)
         dis = sum(list(map(lambda x: pow((x - m), 2), param))) / (len(param) - 1)
         sd = sqrt(dis)
-        print(sd, '--- стандартное отклонение')
-        print()
+        # print(sd, '--- стандартное отклонение')
+        # print()
         self.sd_list.append(sd)
         return sd
 
@@ -96,16 +75,40 @@ class StudentTest:
     def start_test(self, itr=5):
         self.n = itr
         for it in range(itr):
-
             self.test(self.param_list, 10000, it)
         for data in self.data:
             self.get_sd(data)
         print("Среднее время работы 1 и 2 функции")
         print(*self.m_list)
         self.get_se()
-        print(self.m_list[0] - self.m_list[1] ,'--- Разница среднего времени работы')
+        print(self.m_list[0] - self.m_list[1], '--- Разница среднего времени работы')
         print("T-value = ", self.get_t())
 
 
-t_test = StudentTest(test_quads, test_quads_new)
-t_test.start_test(20)
+d_1 = [171, 458, 224, 39, 46, 27, 33, 2, 1]
+d_2 = [182, 431, 237, 38, 48, 30, 33, 1, 1]
+
+d1 = [10,15,25]
+d2 = [20,10,20]
+
+
+class X2:
+    def __init__(self, data_1, data_2):
+        self.data_1 = np.array(data_1)
+        self.data_2 = np.array(data_2)
+        self.sum_1 = sum(data_1)
+        self.sum_2 = sum(data_2)
+        self.expected = []
+
+    def get_x2(self):
+        sum_row = self.data_1 + self.data_2
+        expected_1 = sum_row * self.sum_1 / (self.sum_1 + self.sum_1)
+        expected_2 = sum_row * self.sum_2 / (self.sum_1 + self.sum_1)
+
+        x2 = np.sum(((self.data_1 - expected_1)**2)/expected_1 + ((self.data_2 - expected_2)**2)/expected_2)
+
+        print(x2)
+        return x2
+
+
+

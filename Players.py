@@ -11,6 +11,7 @@ class Player:
     def get_cards(self, table_river: list):
         """Добавляет в атрибут cards 7 карт стол + руку"""
         self.cards = self.hand + table_river
+        self.check_comb_new(self.cards)
 
     # @staticmethod
     # def check_comb(pl_card):

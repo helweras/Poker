@@ -12,6 +12,8 @@ class Table:
         self.deck = [[mast, nominal] for mast in range(4)
                      for nominal in range(2, 15)]
 
+        self.winner_list = None
+
     def set_turn(self, turn):
         self.turn = turn
 
@@ -65,10 +67,11 @@ class Table:
                 winner_list.append(player)
         if len(winner_list) > 1:
             return self.final_win(winner_list)
+        self.winner_list = winner_list
         return winner_list
 
-    @staticmethod
-    def final_win(winner_list):
+
+    def final_win(self, winner_list):
         winner_list_final = [winner_list[0]]
         check = [i[-1] for i in winner_list[0].play_card]
         for pl in winner_list[1:]:
@@ -78,6 +81,7 @@ class Table:
                 winner_list_final = [pl]
             elif play_card == check:
                 winner_list_final.append(pl)
+        self.winner_list = winner_list_final
         return winner_list_final
 
 
@@ -86,6 +90,7 @@ class TableRabbit(Table):
 
     def __init__(self, players, hand=None, turn=None, flop=None, river=None):
         super().__init__(players)
+        self.players = players
         self.deck = [(mast, nominal) for mast in range(4)
                      for nominal in range(2, 15)]
         self.turn = turn
@@ -111,10 +116,13 @@ class TableRabbit(Table):
         и удаляет их из колоды(list_deck)"""
         flag_hand = int(bool(self.hand_fp))
         for player in self.list_players[flag_hand:]:
+            player.hand = []
             for i in range(2):
                 card = choice(self.deck)
                 player.hand.append(card)
                 self.deck.remove(card)
+        self.get_players_cards()
+
 
     def flop_draw(self):
         if self.flop:
@@ -148,7 +156,6 @@ class TableRabbit(Table):
             self.river.append(card)
             self.deck.remove(card)
         self.river.extend(self.turn)
-        self.get_players_cards()
 
     def get_players_cards(self):
         for pl in self.list_players:
@@ -156,10 +163,13 @@ class TableRabbit(Table):
 
     def full_play(self):
         self.flop_draw()
-        print(len(self.deck))
         self.turn_draw()
-        print(len(self.deck))
         self.river_draw()
-        print(len(self.deck))
         self.card_draw()
-        print(len(self.deck))
+
+    def play(self):
+        self.full_play()
+        self.determ_winner()
+        determ_pl = self.list_players[0]
+        return determ_pl in self.winner_list
+

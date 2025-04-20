@@ -1,5 +1,10 @@
+from StatRoom import Room
 from Table import Table, TableRabbit
-import matplotlib
+from Test import StudentTest
+import matplotlib.pyplot as plt
+import time
+from tqdm import tqdm
+
 
 rules = {1: 'старшая карта',
          5: 'пара',
@@ -11,6 +16,10 @@ rules = {1: 'старшая карта',
          25: 'карэ',
          33: 'стрит-флэш'
          }
+
+count_comb = {}
+for key in rules.values():
+    count_comb[key] = 1
 
 
 def test_quads(it: int):
@@ -61,20 +70,20 @@ def test_win(it):
         winners = table.determ_winner()
         print('--------winner---------')
         for pl in winners:
-
             print(pl.play_card)
             print(pl.hand)
             print(f'{pl.cf_comb} ---- {rules[pl.cf_comb]}')
 
 
 def r_true_hand():
-    table = TableRabbit(players=1, hand=[[1, 7], [1, 14]])
+    table = TableRabbit(players=1, hand=[(1, 7), (1, 14)])
     print(len(table.deck))
 
-def test_check_comb():
-    stat_table_orig = {}
-    stat_table_rabbit = {}
-    for i in range(100):
+
+def test_check_comb(it):
+    stat_table_orig = count_comb.copy()
+    stat_table_rabbit = count_comb.copy()
+    for i in range(it):
         table_original = Table(players=1)
 
         table_original.card_draw()
@@ -88,20 +97,70 @@ def test_check_comb():
             stat_table_orig[name] = stat_table_orig.get(name, 0) + 1
     print(stat_table_orig)
 
+    for i in range(it):
+        table_r = TableRabbit(players=1)
 
-    for i in range(100):
-        table_original = TableRabbit(players=1)
+        # table_r.full_play()
+        table_r.flop_draw()
+        table_r.turn_draw()
+        table_r.river_draw()
+        table_r.card_draw()
 
-        table_original.card_draw()
-        table_original.flop_draw()
-        table_original.turn_draw()
-        table_original.river_draw()
-
-        for pl in table_original.list_players:
+        for pl in table_r.list_players:
             pl.check_comb_new(pl.cards)
             name = rules[pl.cf_comb]
             stat_table_rabbit[name] = stat_table_rabbit.get(name, 0) + 1
     print(stat_table_rabbit)
+    return list(stat_table_rabbit.values()), list(stat_table_orig.values())
 
 
-test_check_comb()
+c = 0
+
+# for i in range(10000):
+#     table = TableRabbit(players=8,
+#                         hand=[(0, 14), (0, 13)],
+#                         flop=[(1,3),(2,7),(2,8)],
+#                         turn=[(3,9)],
+#                         river=[])
+#
+#     if table.play():
+#         c += 1
+#     print('--------hands----------')
+#     for k in table.list_players:
+#         print(k.hand)
+#     print()
+#
+#     print(table.river)
+#     print('--------winner---------')
+#     for pl in table.winner_list:
+#         print(pl.play_card)
+#         print(pl.hand)
+#         print(f'{pl.cf_comb} ---- {rules[pl.cf_comb]}')
+#     print(c)
+table = TableRabbit(players=2,
+                    hand=[],
+                    flop=[],
+                    turn=[],
+                    river=[])
+room = Room(table)
+room.up_count()
+print(room.chans())
+# for iteration in tqdm(range(5)):
+#     d =[]
+#     start = time.perf_counter()
+#     for j in range(10):
+#         room = Room(table, iter=3500)
+#         room.up_count()
+#         d.append(room.chans())
+#     stop = time.perf_counter()
+#     time_check.append(stop-start)
+#     sd_3500.append(st.get_sd(d))
+#
+#     for k in range(10):
+#         room = Room(table, iter=6500)
+#         room.up_count()
+#         d.append(room.chans())
+#     stop = time.perf_counter()
+#     time_check.append(stop-start)
+#     sd_6500.append(st.get_sd(d))
+
