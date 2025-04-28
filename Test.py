@@ -1,9 +1,7 @@
 from math import sqrt
-from random import choice
-from Players import Player
-from Table import Table
 import time
 import numpy as np
+from tqdm import tqdm
 
 
 class StudentTest:
@@ -74,8 +72,8 @@ class StudentTest:
 
     def start_test(self, itr=5):
         self.n = itr
-        for it in range(itr):
-            self.test(self.param_list, 10000, it)
+        for it in tqdm(range(itr)):
+            self.test(self.param_list, 1, it)
         for data in self.data:
             self.get_sd(data)
         print("Среднее время работы 1 и 2 функции")

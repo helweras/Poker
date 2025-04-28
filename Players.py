@@ -3,14 +3,14 @@ class Player:
     Все методы определяющие комбинации добавляют в атрибут play_card 5 карт учавствующих в комбинации"""
 
     def __init__(self):
-        self.hand = []
+        self.hand = []  #2 карты на руках
         self.cards = []  # 7 карт 5 общих и рука
         self.play_card = []  # 5 карт участвующие в комбинации появляются после выполнения одного из метода определения комбинаций
         self.cf_comb = 1
 
-    def get_cards(self, table_river: list):
+    def get_cards(self, canvas: list):
         """Добавляет в атрибут cards 7 карт стол + руку"""
-        self.cards = self.hand + table_river
+        self.cards = self.hand + canvas
         self.check_comb_new(self.cards)
 
     # @staticmethod
@@ -35,6 +35,8 @@ class Player:
     #         return CheckRules.higher_card(pl_card)
 
     def check_comb_new(self, cards: list):
+        """Метод возвращает коэфициент первой обнаруженной комбинации
+        Метод проверяет комбинации в определенном порядке"""
         for comb in self.get_comb():
             cf = comb(self.cards)
             if cf:
@@ -179,7 +181,6 @@ class Player:
         if len(check_isk) == 5:
             self.play_card = check_isk
             return 16
-            # return sorted(list(chain.from_iterable(check_isk)), key=lambda x: x[-1])[::-1]
         else:
             return False
 
@@ -202,6 +203,7 @@ class Player:
         # return sorted(pl_card, key=lambda c: c[-1])[2:]
 
     def get_comb(self):
+        """Возвращает кортеж из функций для определения комбинаций в строго определенном порядке"""
         return (
             self.quads, self.street_flash, self.full_house, self.street, self.triple, self.double_or_double,
             self.double, self.higher_card)

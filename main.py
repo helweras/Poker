@@ -1,10 +1,9 @@
 from StatRoom import Room
-from Table import Table, TableRabbit
+from Table import TableRabbit
 from Test import StudentTest
 import matplotlib.pyplot as plt
 import time
 from tqdm import tqdm
-
 
 rules = {1: 'старшая карта',
          5: 'пара',
@@ -25,7 +24,7 @@ for key in rules.values():
 def test_quads(it: int):
     count_qads = 0
     for i in range(it):
-        table = Table(players=1)
+        table = TableRabbit(players=1)
         table.card_draw()
         table.flop_draw()
         table.turn_draw()
@@ -84,7 +83,7 @@ def test_check_comb(it):
     stat_table_orig = count_comb.copy()
     stat_table_rabbit = count_comb.copy()
     for i in range(it):
-        table_original = Table(players=1)
+        table_original = TableRabbit(players=1)
 
         table_original.card_draw()
         table_original.flop_draw()
@@ -114,7 +113,20 @@ def test_check_comb(it):
     return list(stat_table_rabbit.values()), list(stat_table_orig.values())
 
 
-c = 0
+table = TableRabbit(players=2,
+                    hand=[(0, 14), (0, 13)],
+                    flop=[(1, 3), (2, 7), (2, 8)],
+                    turn=[(3, 9)],
+                    river=[])
+
+room = Room(TableRabbit(players=2,
+                        hand=[],
+                        flop=[],
+                        turn=[],
+                        river=[]))
+
+room.up_count()
+print(room.chans())
 
 # for i in range(10000):
 #     table = TableRabbit(players=8,
@@ -137,14 +149,7 @@ c = 0
 #         print(pl.hand)
 #         print(f'{pl.cf_comb} ---- {rules[pl.cf_comb]}')
 #     print(c)
-table = TableRabbit(players=2,
-                    hand=[],
-                    flop=[],
-                    turn=[],
-                    river=[])
-room = Room(table)
-room.up_count()
-print(room.chans())
+
 # for iteration in tqdm(range(5)):
 #     d =[]
 #     start = time.perf_counter()
@@ -164,3 +169,5 @@ print(room.chans())
 #     time_check.append(stop-start)
 #     sd_6500.append(st.get_sd(d))
 
+d = (1,2)
+print(str(d))
