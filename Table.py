@@ -1,6 +1,7 @@
 from Players import Player
 from random import choice
 
+
 class TableRabbit:
     """Класс в котором происходит полная симуляция игры
     1) Раздача флопа (3 карты)
@@ -9,7 +10,7 @@ class TableRabbit:
     4) Раздача карт на руки игрокам
     5) Определение победителя"""
 
-    def __init__(self, players, hand=None, turn=None, flop=None, river=None):
+    def __init__(self, players=2, hand=None, turn=None, flop=None, river=None):
         self.list_players = [Player() for _ in range(players)]  # Генерирует список игроков за столом
         self.players = players  # Колличество игроков за столом
         self.deck = [(mast, nominal) for mast in range(4)
@@ -18,7 +19,7 @@ class TableRabbit:
         self.flop = flop
         self.river = river
         self.hand_fp = False
-        self.canvas = [] # Список с картами выложенными на стол
+        self.canvas = []  # Список с картами выложенными на стол
         self.winner_list = []
         if hand:
             self.hand_fp = hand
@@ -130,4 +131,11 @@ class TableRabbit:
         determ_pl = self.list_players[0]
         return determ_pl in self.winner_list
 
+    def check_empty_hand(self):
+        if not self.hand_fp:
+            self.hand_fp = []
+            return self.hand_fp
+        elif len(self.hand_fp) > 2:
+            return self.hand_fp
+        return False
 
