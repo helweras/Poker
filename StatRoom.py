@@ -35,7 +35,7 @@ class Room:
 
     def chans(self):
         """Метод возвращает процент побед 0-го игрока"""
-        return (self.count_win / self.count_games) * 100
+        return round((self.count_win / self.count_games) * 100, 2)
 
 
 

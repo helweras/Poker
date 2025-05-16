@@ -4,7 +4,8 @@ from Test import StudentTest
 import matplotlib.pyplot as plt
 import time
 from tqdm import tqdm
-
+from Gui import GuiPoker
+from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QPushButton, QHBoxLayout, QFrame
 rules = {1: 'старшая карта',
          5: 'пара',
          10: '2 пары',
@@ -114,20 +115,21 @@ def test_check_comb(it):
 
 
 table = TableRabbit(players=2,
-                    hand=[(0, 14), (0, 13)],
-                    flop=[(1, 3), (2, 7), (2, 8)],
-                    turn=[(3, 9)],
-                    river=[])
+                    hand=[(0, 2), (1, 2)],
+                    flop=[(1, 14), (0, 14), (3, 14)],
+                    turn=[(2, 14)],
+                    river=[(2, 2)])
 
-room = Room(TableRabbit(players=2,
-                        hand=[],
-                        flop=[],
-                        turn=[],
-                        river=[]))
-
-room.up_count()
-print(room.chans())
-
+# room = Room(table)
+#
+# room.up_count()
+# print(room.chans())
+#
+# d = [(2,4), (1,4), (1,5), (3,6), (5,6)]
+# x = d[2:5]
+# c = d[5:6]
+# b = d[6:]
+print(all([]))
 # for i in range(10000):
 #     table = TableRabbit(players=8,
 #                         hand=[(0, 14), (0, 13)],
@@ -168,6 +170,7 @@ print(room.chans())
 #     stop = time.perf_counter()
 #     time_check.append(stop-start)
 #     sd_6500.append(st.get_sd(d))
-
-d = (1,2)
-print(str(d))
+app = QApplication([])
+poker = GuiPoker()
+poker.show()
+app.exec_()
