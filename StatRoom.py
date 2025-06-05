@@ -2,10 +2,10 @@ from Table import TableRabbit
 
 
 class Room:
-    """Класс который симулирует необходимое колличество игр и считает вероятность 0-го игрока не проиграть
+    """Класс, который симулирует необходимое количество игр и считает вероятность 0-го игрока не проиграть
     table - экземпляр класса стола TableRabbit
-    count_games - колличество игр для симуляции"""
-    def __init__(self, table: TableRabbit, count_games=6500):
+    count_games - количество игр для симуляции"""
+    def __init__(self, table: TableRabbit, count_games=3000):
 
         self.table = table
         self.count_win = 0

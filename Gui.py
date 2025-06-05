@@ -3,11 +3,24 @@ from StatRoom import Room
 from Table import TableRabbit
 import sys
 from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QPushButton, QHBoxLayout, QFrame
-from PyQt5.QtCore import pyqtSignal, QObject, QPropertyAnimation, QPoint
+from PyQt5.QtCore import pyqtSignal, QObject, QPropertyAnimation, QPoint, QTimer, Qt
 from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QCursor
+
+
+class MyTimer(QTimer):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.func_for_connect = None
+
+    def get_func(self, func):
+        self.func_for_connect = func
 
 
 class CardPushButton(QPushButton):
+    leave_signal = pyqtSignal(object)
+    input_signal = pyqtSignal(object)
+
     def __init__(self, name, parent, card):
         super().__init__(name, parent)
         self.card = card
@@ -16,6 +29,11 @@ class CardPushButton(QPushButton):
         self.mast, self.nominal = self.card
         self.frame_position = None
         self.index = None
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.check_cursor)
+        self.timer.start(1000)
+
+        self.is_hovered = False
 
     def __str__(self):
         return f'карта ---- {self.card}'
@@ -25,6 +43,23 @@ class CardPushButton(QPushButton):
 
     def get_index(self, index):
         self.index = index
+
+    def check_cursor(self):
+        if not self.underMouse() and self.isChecked() and self.is_hovered:
+            print(self)
+
+    def leaveEvent(self, event):
+        self.leave_signal.emit(self)  # передаём виджет в главное окно
+        super().leaveEvent(event)
+
+    def enterEvent(self, event):
+        self.input_signal.emit(self)
+        super().enterEvent(event)
+
+    def check_hover(self):
+        if not self.isChecked():
+            self.raise_()
+        self.is_hovered = True
 
 
 class MainPushButton(QPushButton):
@@ -111,11 +146,48 @@ class GuiPoker(QWidget):
         self.up_btn, self.down_btn = self.create_up_button(), self.create_down_button()
         self.winrate_label = self.create_winrate_label()
 
+        self.timer_on_card = QTimer()
+        self.timer_leave_card = QTimer()
+        self.timer_leave_card.setSingleShot(True)
+        self.timer_on_card.setSingleShot(True)
+
     # Создание колоды
     @staticmethod
     def create_mast():
         """Метод создает колоду в которой каждая масть это отдельный список карт"""
         return [[(mast, nominal) for nominal in range(2, 15)] for mast in range(4)]
+
+    @staticmethod
+    def reset_z_btn_card(main: MainPushButton):
+        """Метод для восстановления порядка отрисовки карт для определенной масти"""
+        for card in main.cards:
+            card.raise_()
+
+    @staticmethod
+    def between_widget(midl: CardPushButton, und: CardPushButton = None, up: CardPushButton = None):
+        if not und:
+            midl.stackUnder(up)
+        elif not up:
+            und.stackUnder(midl)
+        else:
+            midl.stackUnder(up)
+            und.stackUnder(midl)
+
+    def raise_card(self, widget: CardPushButton):
+        """Метод который, присоединяет функцию поднятия карты к таймеру self.timer_on_card"""
+        self.timer_on_card.timeout.connect(widget.check_hover)
+        self.timer_on_card.start(100)
+
+    def take_seat(self, widget: CardPushButton):
+        """Метод отключает метод поднятия карты от таймера и восстанавливает порядок отрисовки карт"""
+        try:
+            self.timer_on_card.timeout.disconnect(widget.check_hover)
+            if widget.pos() != widget.default_pos and widget.is_hovered:
+                widget.is_hovered = False
+                main_card = self.main_button_list[widget.mast]
+                self.reset_z_btn_card(main_card)
+        except Exception as e:
+            print(e)
 
     # -------------- Создание виджетов -----------------
 
@@ -153,10 +225,13 @@ class GuiPoker(QWidget):
                 btn.setCheckable(True)
                 btn.setGeometry(50, 50, 36, 60)
                 btn.clicked.connect(self.draw_card)
+                btn.leave_signal.connect(self.raise_card)
+                btn.input_signal.connect(self.take_seat)
                 btn.hide()
                 main_button = self.main_button_list[i]
                 main_button.get_card(btn)
                 self.button_card_list.append(btn)
+
 
     # Создание кнопки Сбросить
     def create_refresh_button(self):
@@ -198,6 +273,7 @@ class GuiPoker(QWidget):
             frame = CardFrame(self)
             frame.setGeometry(350 + offset, 100, 36, 60)
             frame.setFrameShape(QFrame.Box)
+            frame.setAttribute(Qt.WA_TransparentForMouseEvents)
             frame.setStyleSheet("background-color: transparent; border: 1px solid #000000;")
             offset += 50
             self.frame_list.append(frame)
@@ -219,6 +295,7 @@ class GuiPoker(QWidget):
             frame = CardFrame(self)
             frame.setGeometry(275 + offset, 180, 36, 60)
             frame.setFrameShape(QFrame.Box)
+            frame.setAttribute(Qt.WA_TransparentForMouseEvents)
             frame.setStyleSheet("background-color: transparent; border: 1px solid #000000;")
             offset += 50
             self.frame_list.append(frame)
@@ -258,6 +335,11 @@ class GuiPoker(QWidget):
         label.adjustSize()
         return label
 
+    @staticmethod
+    def create_timer():
+        timer = QTimer()
+        timer.setSingleShot(True)
+        return timer
 
     # ---------- Методы срабатывающие при нажатии -------
 
@@ -275,7 +357,7 @@ class GuiPoker(QWidget):
             print(e)
 
     def calculate(self):
-        """Метод создает стол и комнту и вызывает метод StatRoom.stat_room.up_count
+        """Метод создает стол и комнату и вызывает метод StatRoom.stat_room.up_count
         И выводит результат"""
         players = self.count_players_label.count
         self.table = TableRabbit(players=players, hand=self.hand, flop=self.flop, turn=self.turn, river=self.river)
@@ -284,6 +366,7 @@ class GuiPoker(QWidget):
         percent = self.stat_room.chans()
         self.winrate_label.setText(f'{percent}%')
         self.winrate_label.adjustSize()
+
     def refresh(self):
         """Сбрасывает состояние программы до начального"""
         try:
@@ -355,12 +438,15 @@ class GuiPoker(QWidget):
             print(e)
 
     def delite_card(self, btn_card: CardPushButton):
-        indx = btn_card.card[0]
-        flag = self.main_button_list[indx].isChecked()
+        inx = btn_card.card[0]
+
+        flag = self.main_button_list[inx].isChecked()
         if flag:
             end_pos = btn_card.default_pos + btn_card.offset * (btn_card.card[-1] - 1)
         else:
+            self.main_button_list[inx].raise_()
             end_pos = btn_card.default_pos
+
         anim = QPropertyAnimation(btn_card, b"pos", self)
         start_pos = btn_card.pos()
         anim.setDuration(100)
@@ -408,7 +494,7 @@ class GuiPoker(QWidget):
         except Exception as e:
             print(e)
 
-    def animation_open(self, clicked: MainPushButton):
+    def animation_open(self, clicked: MainPushButton, durable=200):
         """Метод анимации раскрытия кнопок карт"""
         try:
             offset = QPoint(0, 35)
@@ -417,10 +503,11 @@ class GuiPoker(QWidget):
                 if btn_card.isChecked():
                     continue
                 strat_pos = clicked_button.pos()
+                btn_card.is_hovered = False
                 btn_card.show()
                 btn_card.default_pos = strat_pos
                 anim = QPropertyAnimation(btn_card, b"pos", self)
-                anim.setDuration(200)
+                anim.setDuration(durable)
                 anim.setStartValue(strat_pos)
                 anim.setEndValue(strat_pos + offset * (count + 1))
                 btn_card.raise_()
@@ -499,14 +586,18 @@ class GuiPoker(QWidget):
         return self.check_condition()
 
     def up_players(self):
-        self.count_players_label.count += 1
-        count = self.count_players_label.count
-        self.count_players_label.setText(f'{count}')
+        if self.count_players_label.count < 8:
+            self.count_players_label.count += 1
+            count = self.count_players_label.count
+            self.count_players_label.setText(f'{count}')
+            self.count_players_label.adjustSize()
 
     def down_players(self):
-        self.count_players_label.count -= 1
-        count = self.count_players_label.count
-        self.count_players_label.setText(f'{count}')
+        if self.count_players_label.count > 2:
+            self.count_players_label.count -= 1
+            count = self.count_players_label.count
+            self.count_players_label.setText(f'{count}')
+            self.count_players_label.adjustSize()
 
 
 app = QApplication([])
