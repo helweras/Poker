@@ -146,22 +146,14 @@ class GuiPoker(QWidget):
         self.up_btn, self.down_btn = self.create_up_button(), self.create_down_button()
         self.winrate_label = self.create_winrate_label()
 
-        self.timer_on_card = QTimer()
-        self.timer_leave_card = QTimer()
-        self.timer_leave_card.setSingleShot(True)
-        self.timer_on_card.setSingleShot(True)
+        self.timer_on_card = self.create_timer()
+        self.timer_leave_card = self.create_timer()
 
     # Создание колоды
     @staticmethod
     def create_mast():
         """Метод создает колоду в которой каждая масть это отдельный список карт"""
         return [[(mast, nominal) for nominal in range(2, 15)] for mast in range(4)]
-
-    @staticmethod
-    def reset_z_btn_card(main: MainPushButton):
-        """Метод для восстановления порядка отрисовки карт для определенной масти"""
-        for card in main.cards:
-            card.raise_()
 
     @staticmethod
     def between_widget(midl: CardPushButton, und: CardPushButton = None, up: CardPushButton = None):
@@ -172,6 +164,12 @@ class GuiPoker(QWidget):
         else:
             midl.stackUnder(up)
             und.stackUnder(midl)
+
+    @staticmethod
+    def reset_z_btn_card(main: MainPushButton):
+        """Метод для восстановления порядка отрисовки карт для определенной масти"""
+        for card in main.cards:
+            card.raise_()
 
     def raise_card(self, widget: CardPushButton):
         """Метод который, присоединяет функцию поднятия карты к таймеру self.timer_on_card"""
@@ -184,10 +182,11 @@ class GuiPoker(QWidget):
             self.timer_on_card.timeout.disconnect(widget.check_hover)
             if widget.pos() != widget.default_pos and widget.is_hovered:
                 widget.is_hovered = False
-                main_card = self.main_button_list[widget.mast]
-                self.reset_z_btn_card(main_card)
+                b = widget.mast
+                main_btn = self.main_button_list[b]
+                self.reset_z_btn_card(main_btn)
         except Exception as e:
-            print(e)
+            print(e, 1)
 
     # -------------- Создание виджетов -----------------
 
@@ -225,13 +224,12 @@ class GuiPoker(QWidget):
                 btn.setCheckable(True)
                 btn.setGeometry(50, 50, 36, 60)
                 btn.clicked.connect(self.draw_card)
-                btn.leave_signal.connect(self.raise_card)
-                btn.input_signal.connect(self.take_seat)
+                btn.leave_signal.connect(self.take_seat)
+                btn.input_signal.connect(self.raise_card)
                 btn.hide()
                 main_button = self.main_button_list[i]
                 main_button.get_card(btn)
                 self.button_card_list.append(btn)
-
 
     # Создание кнопки Сбросить
     def create_refresh_button(self):
@@ -438,8 +436,9 @@ class GuiPoker(QWidget):
             print(e)
 
     def delite_card(self, btn_card: CardPushButton):
+        """Метод удаляет кнопку карты со стола и вызывает анимацию перехода карты на свое место
+        с учетом нажатия кнопки масти"""
         inx = btn_card.card[0]
-
         flag = self.main_button_list[inx].isChecked()
         if flag:
             end_pos = btn_card.default_pos + btn_card.offset * (btn_card.card[-1] - 1)
@@ -461,6 +460,7 @@ class GuiPoker(QWidget):
         self.jump_lime_frame()
 
     def jump_lime_frame(self):
+        """Метод определяющий слот для перемещения зеленой рамки"""
         self.lime_frame.show()
         for i in range(len(self.frame_list)):
             frame = self.frame_list[i]
@@ -472,6 +472,7 @@ class GuiPoker(QWidget):
                     self.lime_frame.hide()
 
     def anim_lime_frame(self, card_frame: CardFrame):
+        """Анимация для перехода зеленой рамки на активный слот"""
         anim = QPropertyAnimation(self.lime_frame, b"pos", self)
         start_pos = self.lime_frame.pos()
         end_pos = card_frame.pos()
@@ -485,7 +486,6 @@ class GuiPoker(QWidget):
         try:
             if count == 7:
                 self.frame_list[count - 1].setStyleSheet("background-color: transparent; border: 1px solid #000000;")
-
                 return
             frame = self.frame_list[count]
             frame.setStyleSheet("background-color: transparent; border: 3px solid #00FF00;")
@@ -538,13 +538,15 @@ class GuiPoker(QWidget):
         except Exception as e:
             print(e, 'animation_close')
 
-    def correct_hand(self):
-        return all(self.hand)
-
-    def correct_flop(self):
-        return all(self.flop)
+    # def correct_hand(self):
+    #
+    #     return all(self.hand)
+    #
+    # def correct_flop(self):
+    #     return all(self.flop)
 
     def transform(self):
+        """Метод трансформирует атрибуты в нужную форму"""
         if not any(self.hand):
             self.hand = []
         if not any(self.flop):
@@ -553,10 +555,21 @@ class GuiPoker(QWidget):
             self.turn = []
         if not all(self.river):
             self.river = []
-
+    def transform2(self):
+        """Метод трансформирует атрибуты в нужную форму"""
+        if not any(self.hand):
+            self.hand = []
+        if not any(self.flop):
+            self.flop = []
+        if not all(self.turn):
+            self.turn = []
+        if not all(self.river):
+            self.river = []
     def check_condition(self):
+        """Метод определяет есть ли возможность рассчитать вероятность победы.
+        Возвращает False если не выполнены условия для расчета"""
         try:
-            if self.correct_hand() and self.correct_flop():
+            if all(self.hand) and all(self.flop):
                 lst = [self.hand, self.flop, self.turn, self.river]
                 x = True
                 for i in lst:
@@ -570,7 +583,20 @@ class GuiPoker(QWidget):
         except Exception as e:
             print(e)
 
+    def check_condition2(self):
+        """Метод определяет есть ли возможность рассчитать вероятность победы.
+        Возвращает False если не выполнены условия для расчета"""
+        try:
+            lst = [self.hand, self.flop, self.turn, self.river]
+            check_list = [bool(i) for i in lst]
+
+        except Exception as e:
+            print(e)
+
     def mario(self):
+        """Метод приводит к необходимому виду данные для проверки в методе check_condition(),
+        а так же вызывает методы self.transform() и
+        check_condition()"""
         card_list = []
         for frame in self.frame_list:
             if frame.card_button:
@@ -578,11 +604,12 @@ class GuiPoker(QWidget):
                 card_list.append(card)
             else:
                 card_list.append(frame.card_button)
-        self.hand = card_list[:2]
+        self.hand = card_list[:2]  # Список типа [(3,2), False] - есть одна карта и нет второй
         self.flop = card_list[2:5]
         self.turn = card_list[5:6]
         self.river = card_list[6:]
         self.transform()
+        print(self.hand)
         return self.check_condition()
 
     def up_players(self):

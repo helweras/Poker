@@ -83,13 +83,15 @@ class StudentTest:
         print("T-value = ", self.get_t())
 
 
-d_1 = [171, 458, 224, 39, 46, 27, 33, 2, 1]
-d_2 = [182, 431, 237, 38, 48, 30, 33, 1, 1]
+d1 = [10, 15, 25]
+d2 = [20, 10, 20]
 
-d1 = [10,15,25]
-d2 = [20,10,20]
-
-
+x = []
+c = [1,1,1]
+if all(x) and all(c):
+    print(True)
+else:
+    print(False)
 class X2:
     def __init__(self, data_1, data_2):
         self.data_1 = np.array(data_1)
@@ -103,10 +105,7 @@ class X2:
         expected_1 = sum_row * self.sum_1 / (self.sum_1 + self.sum_1)
         expected_2 = sum_row * self.sum_2 / (self.sum_1 + self.sum_1)
 
-        x2 = np.sum(((self.data_1 - expected_1)**2)/expected_1 + ((self.data_2 - expected_2)**2)/expected_2)
+        x2 = np.sum(((self.data_1 - expected_1) ** 2) / expected_1 + ((self.data_2 - expected_2) ** 2) / expected_2)
 
         print(x2)
         return x2
-
-
-
