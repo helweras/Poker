@@ -32,30 +32,38 @@ class StudentTest:
         t = (s_m[1] - s_m[0]) / self.get_se()
         return t
 
-    def test(self, fun_list, param, it):
+    def test(self, fun_list, param, out_iter, it):
         try:
             start = time.perf_counter()
-            fun_list[0](param)
+            for _ in range(it):
+                fun_list[0](param)
             stop = time.perf_counter()
-            print(f"Первая функция {it + 1}) {stop - start}")
-            print()
+            # print(f"Первая функция {out_iter + 1}) {round(stop - start, 3)}")
+            # print()
             self.data[0].append(stop - start)
         except TypeError:
             start = time.perf_counter()
-            fun_list[0]()
+            for _ in range(it):
+                fun_list[0]()
             stop = time.perf_counter()
+            # print(f"Первая функция {it + 1}) {round(stop - start, 3)}")
+            # print()
             self.data[0].append(stop - start)
         try:
             start = time.perf_counter()
-            fun_list[1](param)
+            for _ in range(it):
+                fun_list[1](param)
             stop = time.perf_counter()
-            print(f"Вторая функция {it + 1}) {stop - start}")
-            print()
+            # print(f"Вторая функция {it + 1}) {round(stop - start, 3)}")
+            # print()
             self.data[1].append(stop - start)
         except TypeError:
             start = time.perf_counter()
-            fun_list[1]()
+            for _ in range(it):
+                fun_list[1]()
             stop = time.perf_counter()
+            # print(f"Вторая функция {it + 1}) {round(stop - start, 3)}")
+            # print()
             self.data[1].append(stop - start)
 
         # start = time.perf_counter()
@@ -70,28 +78,28 @@ class StudentTest:
         # stop = time.perf_counter()
         # return stop - start
 
-    def start_test(self, itr=5):
+    def start_test(self, include_iter, itr=5, param=False):
         self.n = itr
         for it in tqdm(range(itr)):
-            self.test(self.param_list, 1, it)
+            self.test(self.param_list, param, it, it=include_iter)
         for data in self.data:
             self.get_sd(data)
-        print("Среднее время работы 1 и 2 функции")
-        print(*self.m_list)
+        print(f"Среднее время работы 1 и 2 функции при {include_iter} итерациях")
+        print(*[round(count, 3) for count in self.m_list], sep=' Секунд\n', end=' Секунд\n')
         self.get_se()
-        print(self.m_list[0] - self.m_list[1], '--- Разница среднего времени работы')
-        print("T-value = ", self.get_t())
+        print(round(self.m_list[0] - self.m_list[1], 3), '--- Разница среднего времени работы')
+        print("T-value = ", round(self.get_t(), 3))
 
 
 d1 = [10, 15, 25]
 d2 = [20, 10, 20]
 
-x = []
-c = [1,1,1]
-if all(x) and all(c):
-    print(True)
-else:
-    print(False)
+
+
+# if any(x) and all(x):
+#     print(True)
+# else:
+#     print(False)
 class X2:
     def __init__(self, data_1, data_2):
         self.data_1 = np.array(data_1)

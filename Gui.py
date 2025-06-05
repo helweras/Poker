@@ -555,16 +555,9 @@ class GuiPoker(QWidget):
             self.turn = []
         if not all(self.river):
             self.river = []
-    def transform2(self):
-        """Метод трансформирует атрибуты в нужную форму"""
-        if not any(self.hand):
-            self.hand = []
-        if not any(self.flop):
-            self.flop = []
-        if not all(self.turn):
-            self.turn = []
-        if not all(self.river):
-            self.river = []
+
+
+
     def check_condition(self):
         """Метод определяет есть ли возможность рассчитать вероятность победы.
         Возвращает False если не выполнены условия для расчета"""
@@ -587,11 +580,21 @@ class GuiPoker(QWidget):
         """Метод определяет есть ли возможность рассчитать вероятность победы.
         Возвращает False если не выполнены условия для расчета"""
         try:
-            lst = [self.hand, self.flop, self.turn, self.river]
-            check_list = [bool(i) for i in lst]
+            if (all(self.hand) or not any(self.hand)) and (all(self.flop) or not any(self.flop)):
+                lst = [self.river, self.turn, self.flop, self.hand]
+                for i in range(len(lst) - 1):
+                    if (any(lst[i]) and all(lst[i])) is True and (any(lst[i + 1]) and all(lst[i + 1])) is False:
+                        return False
+            else:
+                return False
+            return True
 
         except Exception as e:
             print(e)
+
+
+
+
 
     def mario(self):
         """Метод приводит к необходимому виду данные для проверки в методе check_condition(),
@@ -609,8 +612,7 @@ class GuiPoker(QWidget):
         self.turn = card_list[5:6]
         self.river = card_list[6:]
         self.transform()
-        print(self.hand)
-        return self.check_condition()
+        return self.check_condition2()
 
     def up_players(self):
         if self.count_players_label.count < 8:
@@ -627,7 +629,9 @@ class GuiPoker(QWidget):
             self.count_players_label.adjustSize()
 
 
+
 app = QApplication([])
 poker = GuiPoker()
 poker.show()
 app.exec_()
+test.start_test(include_iter=200000, itr=20, param=x1)
