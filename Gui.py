@@ -2,6 +2,7 @@ from turtledemo.penrose import start
 from StatRoom import Room
 from Table import TableRabbit
 import sys
+from random import choice
 from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QPushButton, QHBoxLayout, QFrame
 from PyQt5.QtCore import pyqtSignal, QObject, QPropertyAnimation, QPoint, QTimer, Qt
 from PyQt5.QtGui import QFont
@@ -32,11 +33,38 @@ class CardPushButton(QPushButton):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.check_cursor)
         self.timer.start(1000)
+        self.mast_str = ''
+        self.setObjectName("MyGradientButton")
 
         self.is_hovered = False
 
     def __str__(self):
         return f'карта ---- {self.card}'
+
+
+    def setting_style(self, colors):
+        font = QFont("Arial", 11)
+        color1, color2 = colors if self.isChecked() else colors[::-1]
+        self.setFont(font)
+        self.setStyleSheet(f"""
+                    QPushButton#MyGradientButton {{
+                        background-color: qlineargradient(
+                            spread:pad, x1:0, y1:0, x2:0, y2:1,
+                            stop:0 {color1},
+                            stop:1 {color2}
+                        );
+                        border: none;
+                        color: black;
+                    }}
+                    QPushButton#MyGradientButton:pressed {{
+                        background-color: qlineargradient(
+                            spread:pad, x1:0, y1:0, x2:0, y2:1,
+                            stop:0 {color1},
+                            stop:1 {color2}
+                        );
+                        color: white;
+                    }}
+                """)
 
     def get_fr_pos(self, pos):
         self.frame_position = pos
@@ -67,9 +95,56 @@ class MainPushButton(QPushButton):
         super().__init__(name, parent)
         self.mast = mast
         self.cards = []
+        self.color_collection = None
+        self.toggled.connect(self.setting_style)
+        self.setter_color = ('#F5F5F5', '#3F888F')
+        self.setObjectName("MyGradientButton")
+
+        self.is_paint = False
 
     def get_card(self, card):
         self.cards.append(card)
+
+    def get_color_collection(self, cc):
+        self.color_collection = cc
+
+    def set_color(self):
+        if self.color_collection:
+            colors = choice(self.color_collection)
+        else:
+            colors = ('#F5F5F5', '#3F888F')
+        self.setter_color = colors
+
+    def paint(self):
+        if not self.is_paint:
+            self.is_paint = True
+            for btn in self.cards:
+                btn.color = self.setter_color
+                btn.setting_style(self.setter_color)
+
+    def setting_style(self):
+        font = QFont("Arial", 20)
+        color1, color2 = self.setter_color if self.isChecked() else self.setter_color[::-1]
+        self.setFont(font)
+        self.setStyleSheet(f"""
+                    QPushButton#MyGradientButton {{
+                        background-color: qlineargradient(
+                            spread:pad, x1:0, y1:0, x2:0, y2:1,
+                            stop:0 {color1},
+                            stop:1 {color2}
+                        );
+                        border: none;
+                        color: black;
+                    }}
+                    QPushButton#MyGradientButton:pressed {{
+                        background-color: qlineargradient(
+                            spread:pad, x1:0, y1:0, x2:0, y2:1,
+                            stop:0 {color1},
+                            stop:1 {color2}
+                        );
+                        color: white;
+                    }}
+                """)
 
 
 class CardFrame(QFrame):
@@ -111,8 +186,10 @@ class GuiPoker(QWidget):
         self.turn = []
         self.river = []
 
-        self.table = None  # Атрибут TableRabbit
-        self.stat_room = None  # Атрибут StatRoom
+        self.collection_color = {0: (), 1: (), 2: (('#DDBEC3', '#CC0605'), ('#EAE6CA', '#B44C43')), 3: ()}
+
+        self.table = TableRabbit(hand=self.hand, flop=self.flop, turn=self.turn, river=self.river)
+        self.stat_room = Room(self.table)  # Атрибут StatRoom
 
         # колода в которой каждая масть это отдельный список карт
         self.card_list = self.create_mast()
@@ -145,6 +222,7 @@ class GuiPoker(QWidget):
         self.count_players_label = self.create_label_players()
         self.up_btn, self.down_btn = self.create_up_button(), self.create_down_button()
         self.winrate_label = self.create_winrate_label()
+        self.count_comb_label = self.create_comb_rate_label()
 
         self.timer_on_card = self.create_timer()
         self.timer_leave_card = self.create_timer()
@@ -168,8 +246,11 @@ class GuiPoker(QWidget):
     @staticmethod
     def reset_z_btn_card(main: MainPushButton):
         """Метод для восстановления порядка отрисовки карт для определенной масти"""
+
         for card in main.cards:
             card.raise_()
+        if not main.isChecked():
+            main.raise_()
 
     def raise_card(self, widget: CardPushButton):
         """Метод который, присоединяет функцию поднятия карты к таймеру self.timer_on_card"""
@@ -186,7 +267,7 @@ class GuiPoker(QWidget):
                 main_btn = self.main_button_list[b]
                 self.reset_z_btn_card(main_btn)
         except Exception as e:
-            print(e, 1)
+            print(e, 'take_seat')
 
     # -------------- Создание виджетов -----------------
 
@@ -194,14 +275,14 @@ class GuiPoker(QWidget):
     def create_main_button(self):
         """Метод создает 4 основные кнопки с названием мастей и располагает их на экране"""
         offset = 0
-        font = QFont("Arial", 20)
         for i, name in enumerate(('♠', '♣', '♥', '♦')):
             main_btn = MainPushButton(name, self, i)
             main_btn.setGeometry(50 + offset, 10, 35, 60)
-            main_btn.setFont(font)
-            main_btn.setStyleSheet('padding: 20px, 10px')
+            main_btn.get_color_collection(self.collection_color[i])
+            main_btn.set_color()
             main_btn.setCheckable(True)
             main_btn.clicked.connect(self.open_close)
+            main_btn.setting_style()
             self.main_button_list.append(main_btn)
             offset += 50
 
@@ -218,9 +299,10 @@ class GuiPoker(QWidget):
     # Создание кнопок карт
     def create_card_btn(self):
         """Метод создает кнопки карт"""
+        mast_str = ('♠', '♣', '♥', '♦')
         for i, mast in enumerate(self.card_list):
             for card in mast:
-                btn = CardPushButton(str(card[-1]), self, card)
+                btn = CardPushButton(f'{card[-1]}{mast_str[i]}', self, card)
                 btn.setCheckable(True)
                 btn.setGeometry(50, 50, 36, 60)
                 btn.clicked.connect(self.draw_card)
@@ -333,6 +415,16 @@ class GuiPoker(QWidget):
         label.adjustSize()
         return label
 
+    def create_comb_rate_label(self):
+        text = self.stat_room.get_string_count_comb()
+        font = QFont('Arial', 13)
+        label = QLabel(self)
+        label.setText(text)
+        label.setFont(font)
+        label.setGeometry(490, 370, 50, 60)
+        label.adjustSize()
+        return label
+
     @staticmethod
     def create_timer():
         timer = QTimer()
@@ -350,6 +442,7 @@ class GuiPoker(QWidget):
             if not flag:
                 self.animation_close(clicked_button)
             else:
+                clicked_button.paint()
                 self.animation_open(clicked_button)
         except Exception as e:
             print(e)
@@ -357,13 +450,17 @@ class GuiPoker(QWidget):
     def calculate(self):
         """Метод создает стол и комнату и вызывает метод StatRoom.stat_room.up_count
         И выводит результат"""
+
         players = self.count_players_label.count
         self.table = TableRabbit(players=players, hand=self.hand, flop=self.flop, turn=self.turn, river=self.river)
         self.stat_room = Room(self.table)
         self.stat_room.up_count()
         percent = self.stat_room.chans()
+        count_comb = self.stat_room.get_string_count_comb()
         self.winrate_label.setText(f'{percent}%')
         self.winrate_label.adjustSize()
+        self.count_comb_label.setText(count_comb)
+        self.count_comb_label.adjustSize()
 
     def refresh(self):
         """Сбрасывает состояние программы до начального"""
@@ -380,6 +477,8 @@ class GuiPoker(QWidget):
             self.jump_lime_frame()
             self.count_players_label.refresh()
             self.winrate_label.setText(f'0%')
+            self.stat_room.set_zero_count_comb()
+            self.count_comb_label.setText(self.stat_room.get_string_count_comb())
         except Exception as e:
             print(e)
 
@@ -538,13 +637,6 @@ class GuiPoker(QWidget):
         except Exception as e:
             print(e, 'animation_close')
 
-    # def correct_hand(self):
-    #
-    #     return all(self.hand)
-    #
-    # def correct_flop(self):
-    #     return all(self.flop)
-
     def transform(self):
         """Метод трансформирует атрибуты в нужную форму"""
         if not any(self.hand):
@@ -555,8 +647,6 @@ class GuiPoker(QWidget):
             self.turn = []
         if not all(self.river):
             self.river = []
-
-
 
     def check_condition(self):
         """Метод определяет есть ли возможность рассчитать вероятность победы.
@@ -592,10 +682,6 @@ class GuiPoker(QWidget):
         except Exception as e:
             print(e)
 
-
-
-
-
     def mario(self):
         """Метод приводит к необходимому виду данные для проверки в методе check_condition(),
         а так же вызывает методы self.transform() и
@@ -629,9 +715,7 @@ class GuiPoker(QWidget):
             self.count_players_label.adjustSize()
 
 
-
 app = QApplication([])
 poker = GuiPoker()
 poker.show()
 app.exec_()
-test.start_test(include_iter=200000, itr=20, param=x1)

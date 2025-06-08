@@ -12,7 +12,7 @@ class TableRabbit:
 
     def __init__(self, players=2, hand=None, turn=None, flop=None, river=None):
         self.list_players = [Player() for _ in range(players)]  # Генерирует список игроков за столом
-        self.players = players  # Колличество игроков за столом
+        self.players = players  # Количество игроков за столом
         self.deck = [(mast, nominal) for mast in range(4)
                      for nominal in range(2, 15)]  # Генерация колоды карт
         self.turn = turn
@@ -70,7 +70,7 @@ class TableRabbit:
         self.canvas.extend(self.turn)
 
     def river_draw(self):
-        """Раздает ривер если он задаи или генерирует его случайно, добавляет его в canvas и удаляет из колоды"""
+        """Раздает ривер если он задан или генерирует его случайно, добавляет его в canvas и удаляет из колоды"""
         if self.river:
             for card in self.river:
                 self.deck.remove(card)
@@ -87,8 +87,8 @@ class TableRabbit:
             pl.get_cards(self.canvas)
 
     def determ_winner(self):
-        """Функция определяет победителя
-        Возвращает список с объектами класса Player с наибольшим коэфициентом"""
+        """Функция определяет победителя.
+        Возвращает список с объектами класса Player с наибольшим коэфицентом"""
         compare_player = self.list_players[0]
         winner_list = [compare_player]
         for player in self.list_players[1:]:
@@ -105,7 +105,7 @@ class TableRabbit:
         """Метод сравнивает игроков в списке winner_list и возвращает список с победителями"""
         winner_list_final = [winner_list[0]]  # Добавляем первого игрока в список для сравнения его с остальными
         check = [card[-1] for card in
-                 winner_list[0].play_card]  # создаем отсортированный список из номиналов карт для для первого игрока
+                 winner_list[0].play_card]  # создаем отсортированный список из номиналов карт для первого игрока
         for pl in winner_list[1:]:  # Начинаем сравнение со второго игрока в списке
             play_card = [card[-1] for card in pl.play_card]  # создаем отсортированный список из номиналов карт
             if play_card > check:  # Если список из номиналов карт другого игрока логически больше
@@ -117,8 +117,8 @@ class TableRabbit:
         return winner_list_final
 
     def full_play(self):
-        """Метод симулирут полный цикл игры
-        Вызовы метоов строго определены"""
+        """Метод симулирует полный цикл игры
+        Вызовы методов строго определены"""
         self.flop_draw()
         self.turn_draw()
         self.river_draw()
@@ -129,7 +129,10 @@ class TableRabbit:
         """Возвращает True если 0-й игрок в списке победителей"""
         self.full_play()
         determ_pl = self.list_players[0]
-        return determ_pl in self.winner_list
+        if determ_pl in self.winner_list:
+            return determ_pl
+        else:
+            return False
 
     def check_empty_hand(self):
         if not self.hand_fp:
