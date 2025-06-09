@@ -41,9 +41,8 @@ class CardPushButton(QPushButton):
     def __str__(self):
         return f'карта ---- {self.card}'
 
-
     def setting_style(self, colors):
-        font = QFont("Arial", 11)
+        font = QFont("Chiller", 12)
         color1, color2 = colors if self.isChecked() else colors[::-1]
         self.setFont(font)
         self.setStyleSheet(f"""
@@ -55,6 +54,7 @@ class CardPushButton(QPushButton):
                         );
                         border: none;
                         color: black;
+                        
                     }}
                     QPushButton#MyGradientButton:pressed {{
                         background-color: qlineargradient(
@@ -63,6 +63,7 @@ class CardPushButton(QPushButton):
                             stop:1 {color2}
                         );
                         color: white;
+                        
                     }}
                 """)
 
@@ -169,10 +170,15 @@ class LabelPlayers(QLabel):
     def __init__(self, text='', parent=None):
         super().__init__(text, parent)
         self.count = 2
+        self.set_style()
 
     def refresh(self):
         self.count = 2
         self.setText(f'{self.count}')
+
+    def set_style(self):
+        font = QFont('Chiller', 11)
+        self.setFont(font)
 
 
 class GuiPoker(QWidget):
@@ -186,6 +192,12 @@ class GuiPoker(QWidget):
         self.turn = []
         self.river = []
 
+        self.fonts = (
+            "Comic Sans MS", "Segoe Print", "Segoe Script", "Lucida Handwriting",
+            "Arial Rounded MT Bold", "Gabriola",
+            "Georgia", "Verdana"
+
+        )
         self.collection_color = {0: (), 1: (), 2: (('#DDBEC3', '#CC0605'), ('#EAE6CA', '#B44C43')), 3: ()}
 
         self.table = TableRabbit(hand=self.hand, flop=self.flop, turn=self.turn, river=self.river)
@@ -208,7 +220,7 @@ class GuiPoker(QWidget):
 
         # Параметры окна
         self.setWindowTitle('Poker')
-        self.setGeometry(100, 100, 800, 600)
+        self.setGeometry(100, 100, 800, 650)
 
         # Методы необходимые при создании основного окна
         self.create_main_button()
@@ -289,7 +301,7 @@ class GuiPoker(QWidget):
     # Создание кнопки расчет
     def create_calculate_button(self):
         """Метод создает кнопку 'Расчет'"""
-        font = QFont('Arial', 11)
+        font = QFont('Segoe Print', 11)
         calcul_btn = QPushButton('Расчет', self)
         calcul_btn.setGeometry(550, 180, 90, 60)
         calcul_btn.setFont(font)
@@ -299,12 +311,16 @@ class GuiPoker(QWidget):
     # Создание кнопок карт
     def create_card_btn(self):
         """Метод создает кнопки карт"""
+        ico = {2: '2', 3: '3', 4: '4', 5: '5', 6: '6', 7: '7', 8: '8', 9: '9', 10: '10', 11: 'J', 12: 'Q', 13: 'K',
+               14: 'A'}
         mast_str = ('♠', '♣', '♥', '♦')
         for i, mast in enumerate(self.card_list):
             for card in mast:
-                btn = CardPushButton(f'{card[-1]}{mast_str[i]}', self, card)
+                nominal = ico[card[-1]]
+                btn = CardPushButton(f'{nominal} {mast_str[i]}', self, card)
                 btn.setCheckable(True)
                 btn.setGeometry(50, 50, 36, 60)
+                btn.setContentsMargins(0, 5, 0, 0)
                 btn.clicked.connect(self.draw_card)
                 btn.leave_signal.connect(self.take_seat)
                 btn.input_signal.connect(self.raise_card)
@@ -316,7 +332,7 @@ class GuiPoker(QWidget):
     # Создание кнопки Сбросить
     def create_refresh_button(self):
         """Метод создает кнопку Сбросить"""
-        font = QFont('Arial', 11)
+        font = QFont('Segoe Print', 11)
         refresh = QPushButton('Сбросить', self)
         refresh.setGeometry(550, 100, 90, 60)
         refresh.setFont(font)
@@ -326,7 +342,7 @@ class GuiPoker(QWidget):
     # Создание кнопки увеличения кол-ва игроков
     def create_up_button(self):
         """Метод создает кнопку увеличения кол-ва игроков"""
-        font = QFont('Arial', 13)
+        font = QFont('Segoe Print', 13)
         font.setBold(True)
         button = QPushButton('+', self)
         button.setGeometry(620, 330 - 40, 40, 40)
@@ -337,7 +353,7 @@ class GuiPoker(QWidget):
     # Создание кнопки уменьшения кол-ва игроков
     def create_down_button(self):
         """Создание кнопки уменьшения кол-ва игроков"""
-        font = QFont('Arial', 13)
+        font = QFont('Segoe Print', 13)
         font.setBold(True)
         button = QPushButton('-', self)
         button.setGeometry(520, 330 - 40, 40, 40)
@@ -383,7 +399,7 @@ class GuiPoker(QWidget):
     # Создание лейбла с надписью
     def create_label_text_players(self):
         """Создание лейбла с надписью"""
-        font = QFont('Arial', 13)
+        font = QFont('Segoe Print', 13)
         label = QLabel(self)
         label.setText(f'игроки')
         label.setFont(font)
@@ -393,7 +409,7 @@ class GuiPoker(QWidget):
 
     def create_label_players(self):
         """Создание лейбла с кол-вом игроков"""
-        font = QFont('Arial', 13)
+        font = QFont('Segoe Print', 13)
         font.setBold(True)
         label = LabelPlayers(parent=self)
         label.setText(f'{label.count}')
@@ -407,7 +423,7 @@ class GuiPoker(QWidget):
         return label
 
     def create_winrate_label(self, percent='0'):
-        font = QFont('Arial', 13)
+        font = QFont('Segoe Print', 13)
         label = QLabel(self)
         label.setText(f'{percent}%')
         label.setFont(font)
@@ -417,7 +433,7 @@ class GuiPoker(QWidget):
 
     def create_comb_rate_label(self):
         text = self.stat_room.get_string_count_comb()
-        font = QFont('Arial', 13)
+        font = QFont('Segoe Print', 11)
         label = QLabel(self)
         label.setText(text)
         label.setFont(font)
@@ -596,7 +612,7 @@ class GuiPoker(QWidget):
     def animation_open(self, clicked: MainPushButton, durable=200):
         """Метод анимации раскрытия кнопок карт"""
         try:
-            offset = QPoint(0, 35)
+            offset = QPoint(0, 37)
             clicked_button = clicked
             for count, btn_card in enumerate(clicked_button.cards):
                 if btn_card.isChecked():
@@ -714,8 +730,7 @@ class GuiPoker(QWidget):
             self.count_players_label.setText(f'{count}')
             self.count_players_label.adjustSize()
 
-
-app = QApplication([])
-poker = GuiPoker()
-poker.show()
-app.exec_()
+# app = QApplication([])
+# poker = GuiPoker()
+# poker.show()
+# app.exec_()
