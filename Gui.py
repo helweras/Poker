@@ -4,9 +4,25 @@ from Table import TableRabbit
 import sys
 from random import choice
 from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QPushButton, QHBoxLayout, QFrame
-from PyQt5.QtCore import pyqtSignal, QObject, QPropertyAnimation, QPoint, QTimer, Qt
+from PyQt5.QtCore import pyqtSignal, QObject, QPropertyAnimation, QPoint, QTimer, Qt, QThread
 from PyQt5.QtGui import QFont
 from PyQt5.QtGui import QCursor
+from PyQt5.QtWidgets import QGraphicsDropShadowEffect
+from PyQt5.QtGui import QColor
+
+
+class Worker(QThread):
+    finished = pyqtSignal(str)
+
+    def __init__(self, work):
+        super().__init__()
+        self.work = work
+
+    def run(self):
+        try:
+            self.work()
+        except Exception as e:
+            print(e)
 
 
 class MyTimer(QTimer):
@@ -26,7 +42,7 @@ class CardPushButton(QPushButton):
         super().__init__(name, parent)
         self.card = card
         self.default_pos = None
-        self.offset = QPoint(0, 35)
+        self.offset = QPoint(0, 37)
         self.mast, self.nominal = self.card
         self.frame_position = None
         self.index = None
@@ -152,6 +168,8 @@ class CardFrame(QFrame):
     def __init__(self, parent):
         super().__init__(parent)
         self.card_button = False
+        self.setObjectName('handFrame')
+        self.set_style()
 
     def __str__(self):
         return 'Моя рамка'
@@ -159,11 +177,24 @@ class CardFrame(QFrame):
     def get_card(self, button: CardPushButton):
         self.card_button = button
 
+    def set_style(self):
+        self.setStyleSheet("""#handFrame{
+                            background: qlineargradient(
+                                spread:pad, x1:0, y1:0, 
+                                x2:0, y2:1,
+                                stop: 0  #2b2b2b,
+                                stop: 1 #444
+                                );
+                                color: white;
+                                border: 1px dashed #666;
+                                }"""
+                           )
+
 
 class LimeFrame(QFrame):
     def __init__(self, parent):
         super().__init__(parent)
-        self.setStyleSheet("background-color: transparent; border: 5px solid #00FF00;")
+        self.setStyleSheet("background-color: transparent; border: transparent;")
 
 
 class LabelPlayers(QLabel):
@@ -198,7 +229,12 @@ class GuiPoker(QWidget):
             "Georgia", "Verdana"
 
         )
-        self.collection_color = {0: (), 1: (), 2: (('#DDBEC3', '#CC0605'), ('#EAE6CA', '#B44C43')), 3: ()}
+
+        self.select_font = self.choice_font()
+        self.collection_color = {0: (('#cdc7a8', '#DCD36A'),),
+                                 1: (('#abcda8', '#5ead52'),),
+                                 2: (('#cda9a8', '#B44C43'),),
+                                 3: (('#a8c9cd', '#52a5ad'),)}
 
         self.table = TableRabbit(hand=self.hand, flop=self.flop, turn=self.turn, river=self.river)
         self.stat_room = Room(self.table)  # Атрибут StatRoom
@@ -220,14 +256,17 @@ class GuiPoker(QWidget):
 
         # Параметры окна
         self.setWindowTitle('Poker')
-        self.setGeometry(100, 100, 800, 650)
+        self.setGeometry(500, 50, 800, 650)
+        self.setObjectName("main_window")
+
+        self.calculating = False
 
         # Методы необходимые при создании основного окна
         self.create_main_button()
         self.create_card_btn()
-        self.lime_frame = self.create_lime_frame()
         self.create_hand_frame()
         self.create_frame_table()
+        self.lime_frame = self.create_lime_frame()
         self.calculate_button = self.create_calculate_button()
         self.refresh_button = self.create_refresh_button()
         self.label_text = self.create_label_text_players()
@@ -235,11 +274,33 @@ class GuiPoker(QWidget):
         self.up_btn, self.down_btn = self.create_up_button(), self.create_down_button()
         self.winrate_label = self.create_winrate_label()
         self.count_comb_label = self.create_comb_rate_label()
-
+        self.set_style()
         self.timer_on_card = self.create_timer()
         self.timer_leave_card = self.create_timer()
+        self.jump_lime_frame()
+
+    def set_style(self):
+        self.setStyleSheet(
+            """#main_window {
+            background: qlineargradient(
+            spread:pad, x1:0, y1:0, 
+            x2:0, y2:1,
+            stop:0 #0c0c0c,
+    stop:0.5 #222831,
+    stop:1 #0c0c0c
+            );
+        }
+        """)
 
     # Создание колоды
+    @staticmethod
+    def apply_glow_effect(widget):
+        glow = QGraphicsDropShadowEffect()
+        glow.setColor(QColor("#d0d0ff"))  # Цвет подсветки
+        glow.setBlurRadius(20)  # Размытие свечения
+        glow.setOffset(0, 0)  # Без смещения — эффект вокруг всего
+        widget.setGraphicsEffect(glow)
+
     @staticmethod
     def create_mast():
         """Метод создает колоду в которой каждая масть это отдельный список карт"""
@@ -281,6 +342,10 @@ class GuiPoker(QWidget):
         except Exception as e:
             print(e, 'take_seat')
 
+    def choice_font(self):
+        font = self.fonts[3]
+        return font
+
     # -------------- Создание виджетов -----------------
 
     # Создание кнопок мастей
@@ -301,11 +366,43 @@ class GuiPoker(QWidget):
     # Создание кнопки расчет
     def create_calculate_button(self):
         """Метод создает кнопку 'Расчет'"""
-        font = QFont('Segoe Print', 11)
+        font = QFont(self.select_font, 11)
         calcul_btn = QPushButton('Расчет', self)
+        calcul_btn.setObjectName('calcul')
         calcul_btn.setGeometry(550, 180, 90, 60)
         calcul_btn.setFont(font)
         calcul_btn.clicked.connect(self.calculate)
+        calcul_btn.setShortcut('Space')
+        calcul_btn.setStyleSheet("""#calcul{
+        background: qlineargradient(
+            spread:pad, x1:0, y1:0, 
+            x2:0, y2:1,
+            stop: 0  #2b2b2b,
+            stop: 1 #0b3d0b
+            );
+            color: white;
+            border: 1.5px solid #145214;
+            }
+            #calcul:disabled{
+        background: qlineargradient(
+            spread:pad, x1:0, y1:0, 
+            x2:1, y2:1,
+            stop: 0  #E32636,
+            stop: 1 #050101
+            );
+            color: #523C36;
+            border: #050101;
+            }
+            #calcul:pressed{
+        background: qlineargradient(
+            spread:pad, x1:0, y1:0, 
+            x2:0, y2:1,
+            stop: 0  #8CCB5E,
+            stop: 1 #228B22
+            );
+            color: white;
+            border: 1.5px solid #BDECB6;
+            }""")
         return calcul_btn
 
     # Создание кнопок карт
@@ -332,33 +429,99 @@ class GuiPoker(QWidget):
     # Создание кнопки Сбросить
     def create_refresh_button(self):
         """Метод создает кнопку Сбросить"""
-        font = QFont('Segoe Print', 11)
+        font = QFont(self.select_font, 11)
         refresh = QPushButton('Сбросить', self)
         refresh.setGeometry(550, 100, 90, 60)
+        refresh.setObjectName('refresh')
         refresh.setFont(font)
         refresh.clicked.connect(self.refresh)
+        refresh.setShortcut('Tab')
+        refresh.setStyleSheet("""#refresh{
+        background: qlineargradient(
+            spread:pad, x1:0, y1:0, 
+            x2:0, y2:1,
+            stop: 0  #1a1a1a,
+            stop: 1 #4b0000
+            );
+            color: white;
+            border: 1.5px solid #700000;
+            }
+            #refresh:pressed{
+        background: qlineargradient(
+            spread:pad, x1:0, y1:0, 
+            x2:0, y2:1,
+            stop: 0  #4b0000,
+            stop: 1 #1a1a1a
+            );
+            color: white;
+            border: 1.5px solid #aa0000;
+            }""")
         return refresh
 
     # Создание кнопки увеличения кол-ва игроков
     def create_up_button(self):
         """Метод создает кнопку увеличения кол-ва игроков"""
-        font = QFont('Segoe Print', 13)
+        font = QFont(self.select_font, 13)
         font.setBold(True)
         button = QPushButton('+', self)
+        button.setObjectName('up')
         button.setGeometry(620, 330 - 40, 40, 40)
         button.setFont(font)
         button.clicked.connect(self.up_players)
+        button.setShortcut('d')
+        button.setStyleSheet("""#up{
+        background: qlineargradient(
+            spread:pad, x1:0, y1:0, 
+            x2:0, y2:1,
+            stop: 0  #1c1c1c,
+            stop: 1 #3b0a45
+            );
+            color: white;
+            border: 1.5px solid #4e1c62;
+            }
+            #up:pressed{
+        background: qlineargradient(
+            spread:pad, x1:0, y1:0, 
+            x2:0, y2:1,
+            stop: 0  #3b0a45,
+            stop: 1 #1a1a1a
+            );
+            color: white;
+            border: 1.5px solid #9932CC;
+            }""")
         return button
 
     # Создание кнопки уменьшения кол-ва игроков
     def create_down_button(self):
         """Создание кнопки уменьшения кол-ва игроков"""
-        font = QFont('Segoe Print', 13)
+        font = QFont(self.select_font, 13)
         font.setBold(True)
         button = QPushButton('-', self)
         button.setGeometry(520, 330 - 40, 40, 40)
         button.setFont(font)
+        button.setObjectName('down')
         button.clicked.connect(self.down_players)
+        button.setShortcut('a')
+        button.setStyleSheet("""#down{
+                background: qlineargradient(
+                    spread:pad, x1:0, y1:0, 
+                    x2:0, y2:1,
+                    stop: 0  #1c1c1c,
+                    stop: 1 #3b0a45
+                    );
+                    color: white;
+                    border: 1.5px solid #4e1c62;
+                    }
+                    #down:pressed{
+                background: qlineargradient(
+                    spread:pad, x1:0, y1:0, 
+                    x2:0, y2:1,
+                    stop: 0  #3b0a45,
+                    stop: 1 #1a1a1a
+                    );
+                    color: white;
+                    border: 1.5px solid #9932CC;
+                    }""")
         return button
 
     # Создание рамок для карт руки
@@ -369,8 +532,8 @@ class GuiPoker(QWidget):
             frame = CardFrame(self)
             frame.setGeometry(350 + offset, 100, 36, 60)
             frame.setFrameShape(QFrame.Box)
+            frame.setObjectName('handFrame')
             frame.setAttribute(Qt.WA_TransparentForMouseEvents)
-            frame.setStyleSheet("background-color: transparent; border: 1px solid #000000;")
             offset += 50
             self.frame_list.append(frame)
 
@@ -380,7 +543,7 @@ class GuiPoker(QWidget):
         frame = LimeFrame(self)
         frame.setGeometry(350, 100, 36, 60)
         frame.setFrameShape(QFrame.Box)
-        frame.lower()
+        frame.raise_()
         return frame
 
     # Создание рамок для карт стола
@@ -392,53 +555,55 @@ class GuiPoker(QWidget):
             frame.setGeometry(275 + offset, 180, 36, 60)
             frame.setFrameShape(QFrame.Box)
             frame.setAttribute(Qt.WA_TransparentForMouseEvents)
-            frame.setStyleSheet("background-color: transparent; border: 1px solid #000000;")
             offset += 50
             self.frame_list.append(frame)
 
     # Создание лейбла с надписью
     def create_label_text_players(self):
         """Создание лейбла с надписью"""
-        font = QFont('Segoe Print', 13)
+        font = QFont(self.select_font, 13)
         label = QLabel(self)
         label.setText(f'игроки')
         label.setFont(font)
-        label.setGeometry(570, 270, 50, 60)
+        label.setGeometry(564, 270, 50, 60)
         label.adjustSize()
+        label.setStyleSheet("color: white")
         return label
 
     def create_label_players(self):
         """Создание лейбла с кол-вом игроков"""
-        font = QFont('Segoe Print', 13)
+        font = QFont(self.select_font, 13)
         font.setBold(True)
         label = LabelPlayers(parent=self)
         label.setText(f'{label.count}')
         label.setFont(font)
         label.setGeometry(585, 300, 50, 60)
-        label.setStyleSheet("background-color: transparent; "
-                            "border-top: 1px solid black; "
-                            "border-bottom: 1px solid black")
+        label.setStyleSheet("background-color: transparent;"
+                            "color: white"
+                            )
         label.adjustSize()
 
         return label
 
     def create_winrate_label(self, percent='0'):
-        font = QFont('Segoe Print', 13)
+        font = QFont(self.select_font, 13)
         label = QLabel(self)
-        label.setText(f'{percent}%')
+        label.setText(f'Нажми Расчет')
         label.setFont(font)
-        label.setGeometry(390, 270, 50, 60)
+        label.setGeometry(330, 270, 50, 60)
         label.adjustSize()
+        label.setStyleSheet("color: white")
         return label
 
     def create_comb_rate_label(self):
         text = self.stat_room.get_string_count_comb()
-        font = QFont('Segoe Print', 11)
+        font = QFont(self.select_font, 13)
         label = QLabel(self)
         label.setText(text)
         label.setFont(font)
         label.setGeometry(490, 370, 50, 60)
         label.adjustSize()
+        label.setStyleSheet("color: white")
         return label
 
     @staticmethod
@@ -466,17 +631,31 @@ class GuiPoker(QWidget):
     def calculate(self):
         """Метод создает стол и комнату и вызывает метод StatRoom.stat_room.up_count
         И выводит результат"""
-
-        players = self.count_players_label.count
-        self.table = TableRabbit(players=players, hand=self.hand, flop=self.flop, turn=self.turn, river=self.river)
-        self.stat_room = Room(self.table)
-        self.stat_room.up_count()
-        percent = self.stat_room.chans()
-        count_comb = self.stat_room.get_string_count_comb()
-        self.winrate_label.setText(f'{percent}%')
-        self.winrate_label.adjustSize()
-        self.count_comb_label.setText(count_comb)
-        self.count_comb_label.adjustSize()
+        try:
+            players = self.count_players_label.count
+            self.calculate_button.setEnabled(False)
+            self.table = TableRabbit(players=players,
+                                     hand=self.hand,
+                                     flop=self.flop,
+                                     turn=self.turn,
+                                     river=self.river)
+            self.stat_room = Room(self.table)
+            self.stat_room.up_count()
+            percent = self.stat_room.chans()
+            count_comb = self.stat_room.get_string_count_comb()
+            # self.winrate_label.setText(f'Шанс на победу {percent}%')
+            self.winrate_label.setText(f"""
+        <span style="color: white;">Шанс на победу: </span>
+        <span style="color: white;">{percent}%: </span>""")
+            self.winrate_label.setGeometry(290, 270, 50, 60)
+            self.winrate_label.adjustSize()
+            self.count_comb_label.setText(count_comb)
+            self.count_comb_label.adjustSize()
+            self.calculate_button.clicked.connect(self.calculate)
+            self.calculate_button.setEnabled(True)
+            self.calculating = False
+        except Exception as e:
+            print(e)
 
     def refresh(self):
         """Сбрасывает состояние программы до начального"""
@@ -492,7 +671,9 @@ class GuiPoker(QWidget):
             self.mario()
             self.jump_lime_frame()
             self.count_players_label.refresh()
-            self.winrate_label.setText(f'0%')
+            self.winrate_label.setText(f'Нажми Расчет')
+            self.winrate_label.setGeometry(330, 270, 50, 60)
+            self.winrate_label.adjustSize()
             self.stat_room.set_zero_count_comb()
             self.count_comb_label.setText(self.stat_room.get_string_count_comb())
         except Exception as e:
@@ -584,10 +765,28 @@ class GuiPoker(QWidget):
                 break
             if i == 6:
                 if frame.card_button:
+                    frame.setGraphicsEffect(None)
                     self.lime_frame.hide()
 
     def anim_lime_frame(self, card_frame: CardFrame):
         """Анимация для перехода зеленой рамки на активный слот"""
+        card_frame.setStyleSheet("""QFrame{
+                            background: qlineargradient(
+                                spread:pad, x1:0, y1:0, 
+                                x2:0, y2:1,
+                                stop:0 #2c2c2c,
+                                stop:0.5 #777777,
+                                stop:1 #aaaaaa);
+                            border: 2px solid #dddddd;
+                                }"""
+                                 )
+        self.apply_glow_effect(card_frame)
+        for i in range(len(self.frame_list)):
+            frame = self.frame_list[i]
+            if frame is card_frame:
+                continue
+            frame.set_style()
+            frame.setGraphicsEffect(None)
         anim = QPropertyAnimation(self.lime_frame, b"pos", self)
         start_pos = self.lime_frame.pos()
         end_pos = card_frame.pos()
@@ -595,7 +794,7 @@ class GuiPoker(QWidget):
         anim.setStartValue(start_pos)
         anim.setEndValue(end_pos)
         anim.start()
-        self.lime_frame.lower()
+        self.lime_frame.raise_()
 
     def get_lime_frame(self, count=0):
         try:

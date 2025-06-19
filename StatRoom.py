@@ -53,7 +53,8 @@ class Room:
     def get_string_count_comb(self):
         string_count = ''
         for key, val in sorted(self.count_comb.items(), key=lambda x: x[1], reverse=True):
-            string_count += f'{key} ------ {round((val / self.count_games) * 100, 2)}\n'
+            tire = (15-len(key)) * '-'
+            string_count += f'{key} {tire} {round((val / self.count_games) * 100, 2)} %\n'
         return string_count
 
 

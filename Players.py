@@ -88,7 +88,7 @@ class Player:
             return False
 
     def flash(self, pl_cards: list):
-        """Возвращает список какрт одной масти если найден флэш
+        """Возвращает список какрт одной масти если найден флэш.
         Используется в функции street_flash"""
         count_mast = {key: [] for key in range(4)}
         for card in pl_cards:
@@ -122,7 +122,7 @@ class Player:
         return False
 
     def triple_or_triple(self, pl_cards: list):
-        """Определяет кобимнацию Сет и исключает два Сета
+        """Определяет комбинацию Сет и исключает два Сета.
         Возвращает весовой коэф Сета если он найден и False если обнаружено два Сета"""
         triple = 0
         count_item = {key: 0 for key in range(2, 15)}
@@ -165,7 +165,7 @@ class Player:
             return False
 
     def street_flash(self, pl_cards: list):
-        """Возвращает коэф. стрит - флэша если он найден
+        """Возвращает коэф. стрит - флэша если он найден.
         Возвращает коэф. флеша если найден флэш и не найден стрит"""
         found_flash = self.flash(pl_cards)
         if type(found_flash) is list:  # Если найден флэш
